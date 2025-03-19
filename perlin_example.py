@@ -2,28 +2,34 @@ import numpy as np
 import os
 import functions.eliott as el
 
+# General static scene parameters
+x_min = -5 # Defined manually in code
+x_max = 5 # Defined manually in code
+y_min = -5 # Defined manually in code
+y_max = 5 # Defined manually in code
+random_seed = 42 # Defined manually in the code
+z_screen = 0 # Defined manually in the code
+
 # Setup the Perlin parameters (Note these will be saved in the data folder)
-x_min = -5
-x_max = 5
-y_min = -5
-y_max = 5
-surface_mesh = 1000
-octaves = 3
-scale = 0.1
-height = 0.5
-z_height = 2
-random_seed = 42
-rays_mesh = 100
+surface_mesh = 1000 # Should be 10 times the amount of rays_mesh
+octaves = 30000 # This should have a slider (int)
+scale = 0.1 # This should have a slider (float)
+height = 0.8 # This should have a slider it cant be lower than 0 and higher than z_height (float)
+z_height = 2 # This should be a slider (float) has to be larger than 0
+rays_mesh = 100 # should be a int box input not a slider
 
 # Setup the screen parameters
-z_screen = 0
-rays_angle = [0, 0, -1]
-n_1 = 1
-n_2 = 1.5
-light_ray_count = 20
+rays_angle = [0, 0 ,-1] # This should be 2 sliders, one for theta and one for phi where theta is the angle in the x-y plane and phi is the angle from the x-y plane, phi can go from 0 to 90 degrees (has to point down) and theta 0 to 360
+n_1 = 1 # Defined manually in the code
+
+# Define separate refractive indices for each color
+n_red = 1.3    # This should be a float box input 
+n_green = 1.3  # This should be a float box input
+n_blue = 1.3   # This should be a float box input
+light_ray_count = 20 # This should be an int slider
 
 # Creates the folder for these parameters
-folder = os.path.join(os.path.dirname(__file__), f'data/x{x_min}x{x_max}y{y_min}y{y_max}s{surface_mesh}o{octaves}sc{scale}h{height}zh{z_height}rs{random_seed}rm{rays_mesh}')
+folder = os.path.join(os.path.dirname(__file__), f'data/x{x_min}x{x_max}y{y_min}y{y_max}s{surface_mesh}o{octaves}sc{scale}h{height}zh{z_height}rs{random_seed}rm{rays_mesh}_colored')
 if not os.path.exists(folder):
     os.makedirs(folder)
 
@@ -44,20 +50,31 @@ ray_coordinates = np.array(np.meshgrid(x_ray, y_ray)).T.reshape(-1, 2)
 ray_3coordinates = el.create_perlin_noise_grid(ray_coordinates, octaves=octaves, scale=scale, height=height, z_height=z_height, random_seed=random_seed)
 light_rays = np.array(rays_angle * len(ray_3coordinates)).reshape(-1, 3)
 
-# Calculate the rays path
+# Calculate the normals
 normals_path = os.path.join(folder, 'normals.npy')
 if os.path.exists(normals_path):
     normals = np.load(normals_path)
 else:
-    normals = el.compute_normal_vectors(surface, ray_coordinates)
+    normals = el.compute_normal_vectors_combined(surface, ray_coordinates, n_jobs=-1, batch_size=100)
     np.save(normals_path, normals)
-refracted = el.refract_light(light_rays, normals, n_1, n_2)
-intersection = el.compute_intersection_with_plane(refracted, ray_3coordinates, z_screen)
 
-# Plot the intersection
-plot_save = os.path.join(folder, 'caustic.pdf')
-el.plot_interactions(intersection, kde=True, save=plot_save)
+# Calculate the refracted rays for each color
+refracted_red = el.refract_light(light_rays, normals, n_1, n_red)
+refracted_green = el.refract_light(light_rays, normals, n_1, n_green)
+refracted_blue = el.refract_light(light_rays, normals, n_1, n_blue)
 
-# Plot the complete 3D interaction
-plot_save = os.path.join(folder, '3D_caustic.pdf')
-el.plot_interactions_3D(surface, ray_3coordinates, light_rays, intersection, z_screen, light_ray_count, save=plot_save)
+# Calculate the intersections with the screen for each color
+intersection_red = el.compute_intersection_with_plane(refracted_red, ray_3coordinates, z_screen)
+intersection_green = el.compute_intersection_with_plane(refracted_green, ray_3coordinates, z_screen)
+intersection_blue = el.compute_intersection_with_plane(refracted_blue, ray_3coordinates, z_screen)
+
+# Save intersections to files
+np.save(os.path.join(folder, 'intersection_red.npy'), intersection_red)
+np.save(os.path.join(folder, 'intersection_green.npy'), intersection_green)
+np.save(os.path.join(folder, 'intersection_blue.npy'), intersection_blue)
+
+# Plot each colour combined
+el.plot_interactions_rgb(intersection_red, intersection_green, intersection_blue, kde=True, save=os.path.join(folder, 'caustic_rgb.pdf'))
+
+# Generate 3D plotly visualizations for each color
+el.plot_interactions_3D_plotly_rgb(surface, ray_3coordinates, light_rays, intersection_red, intersection_green, intersection_blue, z_screen, light_ray_count, save=os.path.join(folder, '3D_caustic_rgb.html'))

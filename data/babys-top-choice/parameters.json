@@ -1,0 +1,20 @@
+{
+    "surface_mesh": 1000,
+    "octaves": 3,
+    "scale": 0.2,
+    "height": 0.8,
+    "z_height": 4,
+    "rays_mesh": 100,
+    "theta": 90,
+    "phi": 90,
+    "n_red": 1.34,
+    "n_green": 1.78,
+    "n_blue": 1,
+    "light_ray_count": 20,
+    "x_min": -5,
+    "x_max": 5,
+    "y_min": -5,
+    "y_max": 5,
+    "z_screen": 0,
+    "random_seed": 42
+}
