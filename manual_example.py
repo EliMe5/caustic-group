@@ -11,7 +11,7 @@ random_seed = 42 # Defined manually in the code
 z_screen = 0 # Defined manually in the code
 
 # Setup the Perlin parameters (Note these will be saved in the data folder)
-surface_mesh = 2000 # Should be 10 times the amount of rays_mesh
+surface_mesh = 4000 # Should be 10 times the amount of rays_mesh
 octaves = 30000 # This should have a slider (int)
 scale = 0.1 # This should have a slider (float)
 height = 0.8 # This should have a slider it cant be lower than 0 and higher than z_height (float)
@@ -26,7 +26,7 @@ n_1 = 1 # Defined manually in the code
 n_red = 1.33    # This should be a float box input 
 n_green = 1.33  # This should be a float box input
 n_blue = 1.33   # This should be a float box input
-light_ray_count = 200 # This should be an int slider
+light_ray_count = 400 # This should be an int slider
 
 # Creates the folder for these parameters
 folder = os.path.join(os.path.dirname(__file__), f'data/x{x_min}x{x_max}y{y_min}y{y_max}s{surface_mesh}o{octaves}sc{scale}h{height}zh{z_height}rs{random_seed}rm{rays_mesh}_colored')
@@ -69,7 +69,7 @@ intersection_red = el.compute_intersection_with_plane(refracted_red, ray_3coordi
 np.save(os.path.join(folder, 'intersection_red.npy'), intersection_red)
 
 # Plot each colour combined
-el.plot_interactions(intersection_red, kde=True)
+el.plot_interactions(intersection_red, kde=False)
 
 # Generate 3D plotly visualizations for each color
-el.plot_interactions_3D_plotly(surface, ray_3coordinates, light_rays, intersection_red, z_screen, light_ray_count)
+#el.plot_interactions_3D_plotly(surface, ray_3coordinates, light_rays, intersection_red, z_screen, light_ray_count)
