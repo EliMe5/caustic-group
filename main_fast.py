@@ -7,9 +7,13 @@ import numpy as np
 import json
 import os
 from functions import math_raycast as mr
+import gunicorn
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+# Set the server for Gunicorn
+server = app.server
 
 # Create the app layout with all input components
 app.layout = dbc.Container([
@@ -528,3 +532,6 @@ def save_simulation(
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+    # For Gunicorn, use the command:
+    app.run_server(debug=False, host="0.0.0.0", port=8080)
